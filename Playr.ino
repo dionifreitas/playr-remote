@@ -368,7 +368,6 @@ int getHidKeyCode(int inputEventCode) {
     case 138: return KEY_HELP; // 0x75 DEC: 117
     case 140: return KEY_CALC; // 0xFB DEC: 251
     case 142: return KEY_SLEEP; // 0xF8 DEC: 248
-    case 150: return KEY_WWW; // 0xF0 DEC: 240
     case 152: return KEY_COFFEE; // 0xF9 DEC: 249
     case 158: return KEY_BACK; // 0xF1 DEC: 241
     case 159: return KEY_FORWARD; // 0xF2 DEC: 242
@@ -377,6 +376,7 @@ int getHidKeyCode(int inputEventCode) {
     case 164: return KEY_PLAYPAUSE; // 0xE8 DEC: 232
     case 165: return KEY_PREVIOUSSONG; // 0xEA DEC: 234
     case 166: return KEY_STOPCD; // 0xE9 DEC: 233
+    case 172: return KEY_HOMEPAGE; // 0xF0 DEC: 240
     case 173: return KEY_REFRESH; // 0xFA DEC: 250
     case 176: return KEY_EDIT; // 0xF7 DEC: 247
     case 177: return KEY_SCROLLUP; // 0xF5 DEC: 245
@@ -489,7 +489,7 @@ void handleServerInstance(String value) {
 void handleKeyEvent(char command, String value) {
   int key = getHidKeyCode(value.toInt());
   if (key == KEY_NEXTSONG || key == KEY_PREVIOUSSONG || key == KEY_STOP || key == KEY_PLAYPAUSE ||
-      key == KEY_MUTE || key == KEY_VOLUMEUP || key == KEY_VOLUMEDOWN || key == KEY_BACK) {
+      key == KEY_MUTE || key == KEY_VOLUMEUP || key == KEY_VOLUMEDOWN || key == KEY_BACK || key == KEY_HOMEPAGE) {
     switch (command) {
       case ON_KEY_DOWN: pressMediaKey(key); break;
       case ON_KEY_UP: releaseMediaKey(key); break;
@@ -636,7 +636,7 @@ size_t pressMediaKey(uint8_t mediaKey)
       _mediaKeyReport[0] = 0x00;
       _mediaKeyReport[1] = 0x20;
       break;
-    case KEY_HOME:
+    case KEY_HOMEPAGE:
       _mediaKeyReport[0] = 0x80;
       _mediaKeyReport[1] = 0x00;
       break;

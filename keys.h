@@ -156,7 +156,6 @@
 #define KEY_HELP 0x75
 #define KEY_CALC 0xFB
 #define KEY_SLEEP 0xF8
-#define KEY_WWW 0xF0
 #define KEY_COFFEE 0xF9
 #define KEY_BACK 0xF1
 #define KEY_FORWARD 0xF2
@@ -165,6 +164,7 @@
 #define KEY_PLAYPAUSE 0xE8
 #define KEY_PREVIOUSSONG 0xEA
 #define KEY_STOPCD 0xE9
+#define KEY_HOMEPAGE 0xF0
 #define KEY_REFRESH 0xFA
 #define KEY_EDIT 0xF7
 #define KEY_SCROLLUP 0xF5
