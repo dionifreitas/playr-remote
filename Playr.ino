@@ -491,17 +491,17 @@ void handleKeyEvent(char command, String value) {
   if (key == KEY_NEXTSONG || key == KEY_PREVIOUSSONG || key == KEY_STOP || key == KEY_STOP || key == KEY_PLAYPAUSE ||
       key == KEY_MUTE || key == KEY_VOLUMEUP || key == KEY_VOLUMEDOWN) {
     switch (command) {
-      case ON_KEY_DOWN: rawPressMediaKey(key); break;
-      case ON_KEY_UP: rawReleaseMediaKey(key); break;
-      case ON_KEY_PRESSED: pressMediaKey(key); break;
+      case ON_KEY_DOWN: pressMediaKey(key); break;
+      case ON_KEY_UP: releaseMediaKey(key); break;
+      case ON_KEY_PRESSED: writeMediaKey(key); break;
       default: return;
     }
     return;
   }
   switch (command) {
-    case ON_KEY_DOWN: rawPress(key); break;
-    case ON_KEY_UP: rawRelease(key); break;
-    case ON_KEY_PRESSED: rawWrite(key); break;
+    case ON_KEY_DOWN: press(key); break;
+    case ON_KEY_UP: release(key); break;
+    case ON_KEY_PRESSED: write(key); break;
     default: return;
   }
 }
@@ -522,14 +522,14 @@ void loop() {
   }
 }
 
-size_t rawWrite(uint8_t c)
+size_t write(uint8_t c)
 {
-  uint8_t p = rawPress(c);
-  rawRelease(c);
+  uint8_t p = press(c);
+  release(c);
   return p;
 }
 
-size_t rawPress(uint8_t hidKey)
+size_t press(uint8_t hidKey)
 {
   Serial.println(Command(LOG, "PRESS " + hidKey));
   uint8_t i;
@@ -565,7 +565,7 @@ size_t rawPress(uint8_t hidKey)
   return 1;
 }
 
-size_t rawRelease(uint8_t hidKey)
+size_t release(uint8_t hidKey)
 {
   uint8_t i;
 
@@ -594,7 +594,14 @@ size_t rawRelease(uint8_t hidKey)
   return 1;
 }
 
-size_t rawPressMediaKey(uint8_t mediaKey)
+size_t writeMediaKey(uint8_t mediaKey)
+{
+  uint8_t p = writeMediaKey(mediaKey);
+  releaseMediaKey(mediaKey);
+  return p;
+}
+
+size_t pressMediaKey(uint8_t mediaKey)
 {
   switch (mediaKey) {
     case KEY_NEXTSONG:
@@ -630,19 +637,12 @@ size_t rawPressMediaKey(uint8_t mediaKey)
   return 1;
 }
 
-size_t rawReleaseMediaKey(uint8_t mediaKey)
+size_t releaseMediaKey(uint8_t mediaKey)
 {
   _mediaKeyReport[0] = 0x00;
   _mediaKeyReport[1] = 0x00;
   sendReport(&_mediaKeyReport);
   return 1;
-}
-
-size_t pressMediaKey(uint8_t mediaKey)
-{
-  uint8_t p = rawPressMediaKey(mediaKey);
-  rawReleaseMediaKey(mediaKey);
-  return p;
 }
 
 void sendReport(KeyReport* keys)
