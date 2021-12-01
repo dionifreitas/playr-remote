@@ -488,8 +488,8 @@ void handleServerInstance(String value) {
 
 void handleKeyEvent(char command, String value) {
   int key = getHidKeyCode(value.toInt());
-  if (key == KEY_NEXTSONG || key == KEY_PREVIOUSSONG || key == KEY_STOP || key == KEY_STOP || key == KEY_PLAYPAUSE ||
-      key == KEY_MUTE || key == KEY_VOLUMEUP || key == KEY_VOLUMEDOWN) {
+  if (key == KEY_NEXTSONG || key == KEY_PREVIOUSSONG || key == KEY_STOP || key == KEY_PLAYPAUSE ||
+      key == KEY_MUTE || key == KEY_VOLUMEUP || key == KEY_VOLUMEDOWN || key == KEY_BACK) {
     switch (command) {
       case ON_KEY_DOWN: pressMediaKey(key); break;
       case ON_KEY_UP: releaseMediaKey(key); break;
@@ -630,6 +630,14 @@ size_t pressMediaKey(uint8_t mediaKey)
       break;
     case KEY_VOLUMEDOWN:
       _mediaKeyReport[0] = 0x40;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_BACK:
+      _mediaKeyReport[0] = 0x00;
+      _mediaKeyReport[1] = 0x20;
+      break;
+    case KEY_HOME:
+      _mediaKeyReport[0] = 0x80;
       _mediaKeyReport[1] = 0x00;
       break;
   }
