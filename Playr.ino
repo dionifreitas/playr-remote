@@ -525,8 +525,8 @@ void loop() {
 size_t rawWrite(uint8_t c)
 {
   uint8_t p = rawPress(c);
-  rawRelease(c);           
-  return p;              
+  rawRelease(c);
+  return p;
 }
 
 size_t rawPress(uint8_t hidKey)
@@ -568,11 +568,11 @@ size_t rawPress(uint8_t hidKey)
 size_t rawRelease(uint8_t hidKey)
 {
   uint8_t i;
- 
+
   if (hidKey == 0) {
     return 0;
   }
-  
+
   switch (hidKey) {
     case KEY_LEFTCTRL: _keyReport.modifiers &= ~MOD_KEY_LEFTCTRL; hidKey = 0; break;
     case KEY_LEFTSHIFT: _keyReport.modifiers &= ~MOD_KEY_LEFTSHIFT; hidKey = 0; break;
@@ -642,7 +642,7 @@ size_t pressMediaKey(uint8_t mediaKey)
 {
   uint8_t p = rawPressMediaKey(mediaKey);
   rawReleaseMediaKey(mediaKey);
-  return p;           
+  return p;
 }
 
 void sendReport(KeyReport* keys)
