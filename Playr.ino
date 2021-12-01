@@ -7,9 +7,10 @@
 #define MEDIA_KEYS_ID 0x02
 #define LED 2
 
-const char K_DOWN = 'D';
-const char K_UP = 'U';
-const char KEY_PRESSED = 'P';
+const char ON_KEY_DOWN = 'D';
+const char ON_KEY_UP = 'U';
+const char ON_KEY_PRESSED = 'P';
+
 const char CLIENT_CONNECTED = 'C';
 const char CLIENT_DISCONNECTED = 'O';
 const char SET_INSTANCE = 'S';
@@ -17,7 +18,8 @@ const char LOG = 'I';
 const char DELIMITER = ';';
 
 typedef uint8_t MediaKeyReport[2];
-MediaKeyReport     _mediaKeyReport;
+MediaKeyReport _mediaKeyReport;
+String message = "";
 
 typedef struct
 {
@@ -67,41 +69,15 @@ class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
       Serial.println(Command(LOG, pCharacteristic->getUUID().toString().c_str()));
     };
 
-    void onWrite(NimBLECharacteristic* pCharacteristic) {
-      uint8_t* value = (uint8_t*)(pCharacteristic->getValue().c_str());
-      (void)value;
-      //Serial.println(Command(LOG, pCharacteristic->getUUID().toString().c_str() + ": onWrite(), value: " + pCharacteristic->getValue().c_str()));
+    void onWrite(NimBLECharacteristic* pCharacteristic) {};
 
-    };
     void onNotify(NimBLECharacteristic* pCharacteristic) {
       Serial.println(Command(LOG, "Sending notification to clients"));
     };
-    void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {
-      String str = ("Notification/Indication status code: ");
-      str += status;
-      str += ", return code: ";
-      str += code;
-      str += ", ";
-      str += NimBLEUtils::returnCodeToString(code);
-      Serial.println(Command(LOG, str));
-    };
-    void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue) {
-      String str = "Client ID: ";
-      str += desc->conn_handle;
-      str += " Address: ";
-      str += std::string(NimBLEAddress(desc->peer_ota_addr)).c_str();
-      if (subValue == 0) {
-        str += " Unsubscribed to ";
-      } else if (subValue == 1) {
-        str += " Subscribed to notfications for ";
-      } else if (subValue == 2) {
-        str += " Subscribed to indications for ";
-      } else if (subValue == 3) {
-        str += " Subscribed to notifications and indications for ";
-      }
-      str += std::string(pCharacteristic->getUUID()).c_str();
-      Serial.println(Command(LOG, str));
-    };
+
+    void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {};
+
+    void onSubscribe(NimBLECharacteristic* pCharacteristic, ble_gap_conn_desc* desc, uint16_t subValue) {};
 };
 
 static DescriptorCallbacks dscCallbacks;
@@ -177,23 +153,28 @@ class ServerCallbacks: public NimBLEServerCallbacks {
       Serial.println(Command(LOG, "Client connected"));
       isConnected = true;
     };
+
     void onDisconnect(NimBLEServer* pServer) {
       Serial.println("Client disconnected - start advertising");
       NimBLEDevice::startAdvertising();
       isConnected = false;
     };
+
     void onConnect(NimBLEServer* pServer, ble_gap_conn_desc* desc) {
       Serial.println(Command(CLIENT_CONNECTED, NimBLEAddress(desc->peer_ota_addr).toString().c_str()));
     };
+
     void onDisconnect (NimBLEServer *pServer, ble_gap_conn_desc *desc) {
       Serial.println(Command(CLIENT_DISCONNECTED, NimBLEAddress(desc->peer_ota_addr).toString().c_str()));
     }
+
     void onMTUChange(uint16_t MTU, ble_gap_conn_desc* desc) {
       Serial.println(Command(LOG, "MTU updated: " + String(MTU) + " for connection ID: " + String(desc->conn_handle)));
     };
+
     uint32_t onPassKeyRequest() {
       Serial.println(Command(LOG, "Server Passkey Request"));
-      return 112233;
+      return 000000;
     };
 
     bool onConfirmPIN(uint32_t pass_key) {
@@ -385,6 +366,21 @@ int getHidKeyCode(int inputEventCode) {
     case 136: return KEY_FIND; // 0x7E DEC: 126
     case 137: return KEY_CUT; // 0x7B DEC: 123
     case 138: return KEY_HELP; // 0x75 DEC: 117
+    case 140: return KEY_CALC; // 0xFB DEC: 251
+    case 142: return KEY_SLEEP; // 0xF8 DEC: 248
+    case 150: return KEY_WWW; // 0xF0 DEC: 240
+    case 152: return KEY_COFFEE; // 0xF9 DEC: 249
+    case 158: return KEY_BACK; // 0xF1 DEC: 241
+    case 159: return KEY_FORWARD; // 0xF2 DEC: 242
+    case 161: return KEY_EJECTCD; // 0xEC DEC: 236
+    case 163: return KEY_NEXTSONG; // 0xEB DEC: 235
+    case 164: return KEY_PLAYPAUSE; // 0xE8 DEC: 232
+    case 165: return KEY_PREVIOUSSONG; // 0xEA DEC: 234
+    case 166: return KEY_STOPCD; // 0xE9 DEC: 233
+    case 173: return KEY_REFRESH; // 0xFA DEC: 250
+    case 176: return KEY_EDIT; // 0xF7 DEC: 247
+    case 177: return KEY_SCROLLUP; // 0xF5 DEC: 245
+    case 178: return KEY_SCROLLDOWN; // 0xF6 DEC: 246
     case 179: return KEY_KPLEFTPAREN; // 0xB6 DEC: 182
     case 180: return KEY_KPRIGHTPAREN; // 0xB7 DEC: 183
     case 183: return KEY_F13; // 0x68 DEC: 104
@@ -439,23 +435,20 @@ void setupMacAddr(int instance) {
   int newSuffix = (macAddr[5] + instance > 255 ?  macAddr[5] + instance - 255 : macAddr[5] + instance);
   uint8_t newMac[6] = {macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], newSuffix - 2};
   esp_base_mac_addr_set(newMac);
-  Serial.print(Command(LOG, "STANDARD MAC "));
+  Serial.print(Command(LOG, "Default Mac "));
   Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
-  Serial.print(Command(LOG, "NEW MAC "));
+  Serial.print(Command(LOG, "New Mac "));
   Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], newSuffix);
 }
 
 void setup() {
   pinMode(LED, OUTPUT);
   Serial.begin(115200);
-  //esp_log_level_set("*", ESP_LOG_VERBOSE);
   Serial.println(Command(LOG, "Starting Playr Server..."));
   int instance = getInstance();
   setupMacAddr(instance);
   startServer(instance == 0 ? "Playr Remote" : "Playr Remote #" + String(instance));
-  Serial.println(Command(LOG, "Started!"));
 }
-String message = "";
 
 String getValue(String data, char separator, int index)
 {
@@ -476,7 +469,7 @@ String getValue(String data, char separator, int index)
 void handleMessage() {
   char command = getValue(message, DELIMITER, 0).charAt(0);
   String value = getValue(message, DELIMITER, 1);
-  if (command == KEY_DOWN || command == KEY_UP || command == KEY_PRESSED) {
+  if (command == ON_KEY_DOWN || command == ON_KEY_UP || command == ON_KEY_PRESSED) {
     handleKeyEvent(command, value);
   } else if (command == SET_INSTANCE) {
     handleServerInstance(value);
@@ -494,25 +487,22 @@ void handleServerInstance(String value) {
 }
 
 void handleKeyEvent(char command, String value) {
-  Serial.println(value);
-  if (value.indexOf(",") > 0) { // Check if is MediaKey
-    int first = getValue(value, ',', 0).toInt();
-    int last = getValue(value, ',', 1).toInt();
-    MediaKeyReport report = { first, last };
+  int key = getHidKeyCode(value.toInt());
+  if (key == KEY_NEXTSONG || key == KEY_PREVIOUSSONG || key == KEY_STOP || key == KEY_STOP || key == KEY_PLAYPAUSE ||
+      key == KEY_MUTE || key == KEY_VOLUMEUP || key == KEY_VOLUMEDOWN) {
     switch (command) {
-      case K_DOWN: press(report); break;
-      case K_UP: release(report); break;
-      case KEY_PRESSED: write(report); break;
+      case ON_KEY_DOWN: rawPressMediaKey(key); break;
+      case ON_KEY_UP: rawReleaseMediaKey(key); break;
+      case ON_KEY_PRESSED: pressMediaKey(key); break;
       default: return;
     }
-  } else { // Not a MediaKey
-    int key = value.toInt();
-    switch (command) {
-      case K_DOWN: press(key); break;
-      case K_UP: release(key); break;
-      case KEY_PRESSED: write(key); break;
-      default: return;
-    }
+    return;
+  }
+  switch (command) {
+    case ON_KEY_DOWN: rawPress(key); break;
+    case ON_KEY_UP: rawRelease(key); break;
+    case ON_KEY_PRESSED: rawWrite(key); break;
+    default: return;
   }
 }
 
@@ -520,8 +510,8 @@ void loop() {
   if (Serial.available()) {
     digitalWrite(LED, HIGH);
     message = Serial.readStringUntil('\n');
-    digitalWrite(LED, LOW);
     handleMessage();
+    digitalWrite(LED, LOW);
   }
 
   if (!isConnected) {
@@ -532,192 +522,29 @@ void loop() {
   }
 }
 
-// HID
-#define SHIFT 0x80
-const uint8_t _asciimap[128] =
+size_t rawWrite(uint8_t c)
 {
-  0x00,             // NUL
-  0x00,             // SOH
-  0x00,             // STX
-  0x00,             // ETX
-  0x00,             // EOT
-  0x00,             // ENQ
-  0x00,             // ACK
-  0x00,             // BEL
-  0x2a,     // BS Backspace
-  0x2b,     // TAB  Tab
-  0x28,     // LF Enter
-  0x00,             // VT
-  0x00,             // FF
-  0x00,             // CR
-  0x00,             // SO
-  0x00,             // SI
-  0x00,             // DEL
-  0x00,             // DC1
-  0x00,             // DC2
-  0x00,             // DC3
-  0x00,             // DC4
-  0x00,             // NAK
-  0x00,             // SYN
-  0x00,             // ETB
-  0x00,             // CAN
-  0x00,             // EM
-  0x00,             // SUB
-  0x00,             // ESC
-  0x00,             // FS
-  0x00,             // GS
-  0x00,             // RS
-  0x00,             // US
-
-  0x2c,      //  ' '
-  0x1e | SHIFT,  // !
-  0x34 | SHIFT,  // "
-  0x20 | SHIFT,  // #
-  0x21 | SHIFT,  // $
-  0x22 | SHIFT,  // %
-  0x24 | SHIFT,  // &
-  0x34,          // '
-  0x26 | SHIFT,  // (
-  0x27 | SHIFT,  // )
-  0x25 | SHIFT,  // *
-  0x2e | SHIFT,  // +
-  0x36,          // ,
-  0x2d,          // -
-  0x37,          // .
-  0x38,          // /
-  0x27,          // 0
-  0x1e,          // 1
-  0x1f,          // 2
-  0x20,          // 3
-  0x21,          // 4
-  0x22,          // 5
-  0x23,          // 6
-  0x24,          // 7
-  0x25,          // 8
-  0x26,          // 9
-  0x33 | SHIFT,    // :
-  0x33,          // ;
-  0x36 | SHIFT,    // <
-  0x2e,          // =
-  0x37 | SHIFT,    // >
-  0x38 | SHIFT,    // ?
-  0x1f | SHIFT,    // @
-  0x04 | SHIFT,    // A
-  0x05 | SHIFT,    // B
-  0x06 | SHIFT,    // C
-  0x07 | SHIFT,    // D
-  0x08 | SHIFT,    // E
-  0x09 | SHIFT,    // F
-  0x0a | SHIFT,    // G
-  0x0b | SHIFT,    // H
-  0x0c | SHIFT,    // I
-  0x0d | SHIFT,    // J
-  0x0e | SHIFT,    // K
-  0x0f | SHIFT,    // L
-  0x10 | SHIFT,    // M
-  0x11 | SHIFT,    // N
-  0x12 | SHIFT,    // O
-  0x13 | SHIFT,    // P
-  0x14 | SHIFT,    // Q
-  0x15 | SHIFT,    // R
-  0x16 | SHIFT,    // S
-  0x17 | SHIFT,    // T
-  0x18 | SHIFT,    // U
-  0x19 | SHIFT,    // V
-  0x1a | SHIFT,    // W
-  0x1b | SHIFT,    // X
-  0x1c | SHIFT,    // Y
-  0x1d | SHIFT,    // Z
-  0x2f,          // [
-  0x31,          // bslash
-  0x30,          // ]
-  0x23 | SHIFT,  // ^
-  0x2d | SHIFT,  // _
-  0x35,          // `
-  0x04,          // a
-  0x05,          // b
-  0x06,          // c
-  0x07,          // d
-  0x08,          // e
-  0x09,          // f
-  0x0a,          // g
-  0x0b,          // h
-  0x0c,          // i
-  0x0d,          // j
-  0x0e,          // k
-  0x0f,          // l
-  0x10,          // m
-  0x11,          // n
-  0x12,          // o
-  0x13,          // p
-  0x14,          // q
-  0x15,          // r
-  0x16,          // s
-  0x17,          // t
-  0x18,          // u
-  0x19,          // v
-  0x1a,          // w
-  0x1b,          // x
-  0x1c,          // y
-  0x1d,          // z
-  0x2f | SHIFT,  //
-  0x31 | SHIFT,  // |
-  0x30 | SHIFT,  // }
-  0x35 | SHIFT,  // ~
-  0       // DEL
-};
-
-size_t write(uint8_t c)
-{
-  uint8_t p = press(c);  // Keydown
-  release(c);            // Keyup
-  return p;              // just return the result of press() since release() almost always returns 1
+  uint8_t p = rawPress(c);
+  rawRelease(c);           
+  return p;              
 }
-
-size_t write(const MediaKeyReport c)
-{
-  uint16_t p = press(c);  // Keydown
-  release(c);            // Keyup
-  return p;              // just return the result of press() since release() almost always returns 1
-}
-
-//size_t write(const uint8_t *buffer, size_t size) {
-//  size_t n = 0;
-//  while (size--) {
-//    if (*buffer != '\r') {
-//      if (write(*buffer)) {
-//        n++;
-//      } else {
-//        break;
-//      }
-//    }
-//    buffer++;
-//  }
-//  return n;
-//}
-
-#define MOD_KEY_LEFTCTRL 1;     // aka 00000001, 0x01
-#define MOD_KEY_LEFTSHIFT 2;    // aka 00000010, 0x02 
-#define MOD_KEY_LEFTALT 4;      // aka 00000100, 0x04 
-#define MOD_KEY_LEFT_GUI 8;     // aka 00001000, 0x08 
-#define MOD_KEY_RIGHTCTRL 16;   // aka 00010000, 0x10 
-#define MOD_KEY_RIGHTSHIFT 32;  // aka 00100000, 0x20 
-#define MOD_KEY_RIGHTALT 64;    // aka 01000000, 0x40 
-#define MOD_KEY_RIGHT_GUI 128;  // aka 10000000, 0x80 
 
 size_t rawPress(uint8_t hidKey)
 {
+  Serial.println(Command(LOG, "PRESS " + hidKey));
   uint8_t i;
-
+  if (hidKey == 0) {
+    return 0;
+  }
   switch (hidKey) {
-    case KEY_LEFTCTRL: _keyReport.modifiers |= MOD_KEY_LEFTCTRL; break;
-    case KEY_LEFTSHIFT: _keyReport.modifiers |= MOD_KEY_LEFTSHIFT; break;
-    case KEY_LEFTALT: _keyReport.modifiers |= MOD_KEY_LEFTALT; break;
-    case KEY_LEFTMETA: _keyReport.modifiers |= MOD_KEY_LEFT_GUI; break; // aka Windows Key
-    case KEY_RIGHTCTRL: _keyReport.modifiers |= MOD_KEY_RIGHTCTRL; break;
-    case KEY_RIGHTSHIFT: _keyReport.modifiers |= MOD_KEY_RIGHTSHIFT; break;
-    case KEY_RIGHTALT: _keyReport.modifiers |= MOD_KEY_RIGHTALT; break;
-    case KEY_RIGHTMETA: _keyReport.modifiers |= MOD_KEY_RIGHT_GUI; break; // aka Windows Key
+    case KEY_LEFTCTRL: _keyReport.modifiers |= MOD_KEY_LEFTCTRL; hidKey = 0; break;
+    case KEY_LEFTSHIFT: _keyReport.modifiers |= MOD_KEY_LEFTSHIFT; hidKey = 0; break;
+    case KEY_LEFTALT: _keyReport.modifiers |= MOD_KEY_LEFTALT; hidKey = 0; break;
+    case KEY_LEFTMETA: _keyReport.modifiers |= MOD_KEY_LEFT_GUI; hidKey = 0; break; // aka Windows Key
+    case KEY_RIGHTCTRL: _keyReport.modifiers |= MOD_KEY_RIGHTCTRL; hidKey = 0; break;
+    case KEY_RIGHTSHIFT: _keyReport.modifiers |= MOD_KEY_RIGHTSHIFT; hidKey = 0; break;
+    case KEY_RIGHTALT: _keyReport.modifiers |= MOD_KEY_RIGHTALT; hidKey = 0; break;
+    case KEY_RIGHTMETA: _keyReport.modifiers |= MOD_KEY_RIGHT_GUI; hidKey = 0; break; // aka Windows Key
   }
 
   if (_keyReport.keys[0] != hidKey && _keyReport.keys[1] != hidKey &&
@@ -738,83 +565,27 @@ size_t rawPress(uint8_t hidKey)
   return 1;
 }
 
-size_t press(uint8_t k)
+size_t rawRelease(uint8_t hidKey)
 {
   uint8_t i;
-  if (k >= 136) {     // it's a non-printing key (not a modifier)
-    k = k - 136;
-  } else if (k >= 128) {  // it's a modifier key
-    _keyReport.modifiers |= (1 << (k - 128));
-    k = 0;
-  } else {        // it's a printing key
-    k = pgm_read_byte(_asciimap + k);
-    if (!k) {
-      //setWriteError();
-      return 0;
-    }
-    if (k & 0x80) {           // it's a capital letter or other character reached with shift
-      _keyReport.modifiers |= 0x02; // the left shift modifier
-      k &= 0x7F;
-    }
+ 
+  if (hidKey == 0) {
+    return 0;
+  }
+  
+  switch (hidKey) {
+    case KEY_LEFTCTRL: _keyReport.modifiers &= ~MOD_KEY_LEFTCTRL; hidKey = 0; break;
+    case KEY_LEFTSHIFT: _keyReport.modifiers &= ~MOD_KEY_LEFTSHIFT; hidKey = 0; break;
+    case KEY_LEFTALT: _keyReport.modifiers &= ~MOD_KEY_LEFTALT; hidKey = 0; break;
+    case KEY_LEFTMETA: _keyReport.modifiers &= ~MOD_KEY_LEFT_GUI; hidKey = 0; break; // aka Windows Key
+    case KEY_RIGHTCTRL: _keyReport.modifiers &= ~MOD_KEY_RIGHTCTRL; hidKey = 0; break;
+    case KEY_RIGHTSHIFT: _keyReport.modifiers &= ~MOD_KEY_RIGHTSHIFT; hidKey = 0; break;
+    case KEY_RIGHTALT: _keyReport.modifiers &= ~MOD_KEY_RIGHTALT; hidKey = 0; break;
+    case KEY_RIGHTMETA: _keyReport.modifiers &= ~MOD_KEY_RIGHT_GUI; hidKey = 0; break; // aka Windows Key
   }
 
-  // Add k to the key report only if it's not already present
-  // and if there is an empty slot.
-  if (_keyReport.keys[0] != k && _keyReport.keys[1] != k &&
-      _keyReport.keys[2] != k && _keyReport.keys[3] != k &&
-      _keyReport.keys[4] != k && _keyReport.keys[5] != k) {
-
-    for (i = 0; i < 6; i++) {
-      if (_keyReport.keys[i] == 0x00) {
-        _keyReport.keys[i] = k;
-        break;
-      }
-    }
-    if (i == 6) {
-      //setWriteError();
-      return 0;
-    }
-  }
-  sendReport(&_keyReport);
-  return 1;
-}
-
-size_t press(const MediaKeyReport k)
-{
-  uint16_t k_16 = k[1] | (k[0] << 8);
-  uint16_t mediaKeyReport_16 = _mediaKeyReport[1] | (_mediaKeyReport[0] << 8);
-
-  mediaKeyReport_16 |= k_16;
-  _mediaKeyReport[0] = (uint8_t)((mediaKeyReport_16 & 0xFF00) >> 8);
-  _mediaKeyReport[1] = (uint8_t)(mediaKeyReport_16 & 0x00FF);
-
-  sendReport(&_mediaKeyReport);
-  return 1;
-}
-
-size_t release(uint8_t k)
-{
-  uint8_t i;
-  if (k >= 136) {     // it's a non-printing key (not a modifier)
-    k = k - 136;
-  } else if (k >= 128) {  // it's a modifier key
-    _keyReport.modifiers &= ~(1 << (k - 128));
-    k = 0;
-  } else {        // it's a printing key
-    k = pgm_read_byte(_asciimap + k);
-    if (!k) {
-      return 0;
-    }
-    if (k & 0x80) {             // it's a capital letter or other character reached with shift
-      _keyReport.modifiers &= ~(0x02);  // the left shift modifier
-      k &= 0x7F;
-    }
-  }
-
-  // Test the key report to see if k is present.  Clear it if it exists.
-  // Check all positions in case the key is present more than once (which it shouldn't be)
   for (i = 0; i < 6; i++) {
-    if (0 != k && _keyReport.keys[i] == k) {
+    if (0 != hidKey && _keyReport.keys[i] == hidKey) {
       _keyReport.keys[i] = 0x00;
     }
   }
@@ -823,42 +594,65 @@ size_t release(uint8_t k)
   return 1;
 }
 
-size_t release(const MediaKeyReport k)
+size_t rawPressMediaKey(uint8_t mediaKey)
 {
-  uint16_t k_16 = k[1] | (k[0] << 8);
-  uint16_t mediaKeyReport_16 = _mediaKeyReport[1] | (_mediaKeyReport[0] << 8);
-  mediaKeyReport_16 &= ~k_16;
-  _mediaKeyReport[0] = (uint8_t)((mediaKeyReport_16 & 0xFF00) >> 8);
-  _mediaKeyReport[1] = (uint8_t)(mediaKeyReport_16 & 0x00FF);
-
+  switch (mediaKey) {
+    case KEY_NEXTSONG:
+      _mediaKeyReport[0] = 0x01;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_PREVIOUSSONG:
+      _mediaKeyReport[0] = 0x02;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_STOP:
+      _mediaKeyReport[0] = 0x04;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_PLAYPAUSE:
+      _mediaKeyReport[0] = 0x08;
+      _mediaKeyReport[1] = 0x01;
+      break;
+    case KEY_MUTE:
+      _mediaKeyReport[0] = 0x10;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_VOLUMEUP:
+      _mediaKeyReport[0] = 0x20;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_VOLUMEDOWN:
+      _mediaKeyReport[0] = 0x40;
+      _mediaKeyReport[1] = 0x00;
+      break;
+  }
   sendReport(&_mediaKeyReport);
   return 1;
 }
 
+size_t rawReleaseMediaKey(uint8_t mediaKey)
+{
+  _mediaKeyReport[0] = 0x00;
+  _mediaKeyReport[1] = 0x00;
+  sendReport(&_mediaKeyReport);
+  return 1;
+}
+
+size_t pressMediaKey(uint8_t mediaKey)
+{
+  uint8_t p = rawPressMediaKey(mediaKey);
+  rawReleaseMediaKey(mediaKey);
+  return p;           
+}
+
 void sendReport(KeyReport* keys)
 {
-  //  Serial.println("l;Clients: " +  String(inputKeyboard->getSubscribedCount ()));
-  //  Serial.println("l;Clients1: " +  String(inputMediaKeys->getSubscribedCount ()));
   inputKeyboard->setValue((uint8_t*)keys, sizeof(KeyReport));
   inputKeyboard->notify();
-
 }
 
 void sendReport(MediaKeyReport* keys)
 {
-  //  Serial.println("l;Clients: " +  String(inputKeyboard->getSubscribedCount ()));
-  //  Serial.println("l;Clients1: " +  String(inputMediaKeys->getSubscribedCount ()));
   inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
   inputMediaKeys->notify();
-}
-
-void delay_ms(uint64_t ms) {
-  uint64_t m = esp_timer_get_time();
-  if (ms) {
-    uint64_t e = (m + (ms * 1000));
-    if (m > e) { //overflow
-      while (esp_timer_get_time() > e) { }
-    }
-    while (esp_timer_get_time() < e) {}
-  }
 }

@@ -1,6 +1,26 @@
 #ifndef KEYS_DEF
 #define KEYS_DEF
 
+// Modifier Keys
+#define MOD_KEY_LEFTCTRL 1;     // aka 00000001, 0x01
+#define MOD_KEY_LEFTSHIFT 2;    // aka 00000010, 0x02 
+#define MOD_KEY_LEFTALT 4;      // aka 00000100, 0x04 
+#define MOD_KEY_LEFT_GUI 8;     // aka 00001000, 0x08 
+#define MOD_KEY_RIGHTCTRL 16;   // aka 00010000, 0x10 
+#define MOD_KEY_RIGHTSHIFT 32;  // aka 00100000, 0x20 
+#define MOD_KEY_RIGHTALT 64;    // aka 01000000, 0x40 
+#define MOD_KEY_RIGHT_GUI 128;  // aka 10000000, 0x80 
+
+// Media Keys
+#define USB_HID_SCAN_NEXT 0x01
+#define USB_HID_SCAN_PREV 0x02
+#define USB_HID_STOP      0x04
+#define USB_HID_EJECT     0x08
+#define USB_HID_PAUSE     0x10
+#define USB_HID_MUTE      0x20
+#define USB_HID_VOL_UP    0x40
+#define USB_HID_VOL_DEC   0x80
+
 #define KEY_ESC 0x29
 #define KEY_1 0x1E
 #define KEY_2 0x1F
@@ -134,6 +154,21 @@
 #define KEY_FIND 0x7E
 #define KEY_CUT 0x7B
 #define KEY_HELP 0x75
+#define KEY_CALC 0xFB
+#define KEY_SLEEP 0xF8
+#define KEY_WWW 0xF0
+#define KEY_COFFEE 0xF9
+#define KEY_BACK 0xF1
+#define KEY_FORWARD 0xF2
+#define KEY_EJECTCD 0xEC
+#define KEY_NEXTSONG 0xEB
+#define KEY_PLAYPAUSE 0xE8
+#define KEY_PREVIOUSSONG 0xEA
+#define KEY_STOPCD 0xE9
+#define KEY_REFRESH 0xFA
+#define KEY_EDIT 0xF7
+#define KEY_SCROLLUP 0xF5
+#define KEY_SCROLLDOWN 0xF6
 #define KEY_KPLEFTPAREN 0xB6
 #define KEY_KPRIGHTPAREN 0xB7
 #define KEY_F13 0x68
