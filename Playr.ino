@@ -618,7 +618,7 @@ size_t pressMediaKey(uint8_t mediaKey)
       break;
     case KEY_PLAYPAUSE:
       _mediaKeyReport[0] = 0x08;
-      _mediaKeyReport[1] = 0x01;
+      _mediaKeyReport[1] = 0x00;
       break;
     case KEY_MUTE:
       _mediaKeyReport[0] = 0x10;
