@@ -5,6 +5,7 @@
 
 #define KEYBOARD_ID 0x01
 #define MEDIA_KEYS_ID 0x02
+#define SYSTEM_CONTROL_ID 0x03
 #define LED 2
 
 const char ON_KEY_DOWN = 'D';
@@ -19,6 +20,10 @@ const char DELIMITER = ';';
 
 typedef uint8_t MediaKeyReport[2];
 MediaKeyReport _mediaKeyReport;
+
+typedef uint8_t SystemKeyReport[2];
+SystemKeyReport _systemKeyReport;
+
 String message = "";
 
 typedef struct
@@ -39,6 +44,7 @@ NimBLEHIDDevice* hid;
 NimBLECharacteristic* inputKeyboard;
 NimBLECharacteristic* outputKeyboard;
 NimBLECharacteristic* inputMediaKeys;
+NimBLECharacteristic* inputSystemKeys;
 Preferences preferences;
 
 bool isConnected = false;
@@ -145,7 +151,23 @@ static const uint8_t _hidReportDescriptor[] = {
   USAGE(2),           0x83, 0x01,    //   Usage (Media sel)   ; bit 6: 64
   USAGE(2),           0x8A, 0x01,    //   Usage (Mail)        ; bit 7: 128
   HIDINPUT(1),        0x02,          //   INPUT (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  END_COLLECTION(0)                  // END_COLLECTION
+  END_COLLECTION(0),                 // END_COLLECTION
+  // ------------------------------------------------- System Control
+  USAGE_PAGE(1), 0x01,              // USAGE_PAGE (Generic Desktop)
+  USAGE(1), 0x80,                   // USAGE (System Control)
+  COLLECTION(1), 0x01,              // COLLECTION (Application)
+  REPORT_ID(1), SYSTEM_CONTROL_ID,  //   REPORT_ID
+  REPORT_COUNT(1), 0x01,            //   REPORT_COUNT (1)
+  REPORT_SIZE(1), 0x02,             //   REPORT_SIZE (2)
+  LOGICAL_MINIMUM(1), 0x01,         //   LOGICAL_MINIMUM (1)
+  LOGICAL_MAXIMUM(1), 0x03,         //   LOGICAL_MAXIMUM (3)
+  USAGE(1), 0x81,                   //   USAGE (System Power)
+  USAGE(1), 0x82,                   //   USAGE (System Sleep)
+  USAGE(1), 0x83,                   //   USAGE (System Wakeup)
+  HIDINPUT(1), 0x60,                //   INPUT
+  REPORT_SIZE(1), 0x06,             //   REPORT_SIZE (6)
+  HIDINPUT(1), 0x03,                //   INPUT (Cnst,Var,Abs)
+  END_COLLECTION(0),                // END_COLLECTION
 };
 
 class ServerCallbacks: public NimBLEServerCallbacks {
@@ -203,6 +225,7 @@ void setupHid() {
   inputKeyboard = hid->inputReport(KEYBOARD_ID);  // <-- input REPORTID from report map
   outputKeyboard = hid->outputReport(KEYBOARD_ID);
   inputMediaKeys = hid->inputReport(MEDIA_KEYS_ID);
+  inputSystemKeys = hid->inputReport(SYSTEM_CONTROL_ID);
   outputKeyboard->setCallbacks(&chrCallbacks);
   hid->manufacturer()->setValue("Playr");
   hid->pnp(0x02, vid, pid, version);
@@ -481,7 +504,6 @@ void handleServerInstance(String value) {
   if (instance >= 0 && instance < 255) {
     setupInstance(instance);
     NimBLEDevice::deinit(true);
-    //delay(500);
     ESP.restart();
   }
 }
@@ -498,6 +520,17 @@ void handleKeyEvent(char command, String value) {
     }
     return;
   }
+
+  if (key == KEY_POWER || key == KEY_SLEEP) {
+    switch (command) {
+      case ON_KEY_DOWN: pressSystemKey(key); break;
+      case ON_KEY_UP: releaseSystemKey(key); break;
+      case ON_KEY_PRESSED: writeSystemKey(key); break;
+      default: return;
+    }
+    return;
+  }
+
   switch (command) {
     case ON_KEY_DOWN: press(key); break;
     case ON_KEY_UP: release(key); break;
@@ -596,7 +629,7 @@ size_t release(uint8_t hidKey)
 
 size_t writeMediaKey(uint8_t mediaKey)
 {
-  uint8_t p = writeMediaKey(mediaKey);
+  uint8_t p = pressMediaKey(mediaKey);
   releaseMediaKey(mediaKey);
   return p;
 }
@@ -653,6 +686,37 @@ size_t releaseMediaKey(uint8_t mediaKey)
   return 1;
 }
 
+size_t writeSystemKey(uint8_t systemKey)
+{
+  uint8_t p = pressSystemKey(systemKey);
+  releaseSystemKey(systemKey);
+  return p;
+}
+
+size_t pressSystemKey(uint8_t systemKey)
+{
+  switch (systemKey) {
+    case KEY_POWER:
+      _systemKeyReport[0] = 0x01;
+      _systemKeyReport[1] = 0x00;
+      break;
+    case KEY_SLEEP:
+      _systemKeyReport[0] = 0x02;
+      _systemKeyReport[1] = 0x00;
+      break;
+  }
+  sendSystemReport(&_systemKeyReport);
+  return 1;
+}
+
+size_t releaseSystemKey(uint8_t systemKey)
+{
+  _systemKeyReport[0] = 0x00;
+  _systemKeyReport[1] = 0x00;
+  sendSystemReport(&_systemKeyReport);
+  return 1;
+}
+
 void sendReport(KeyReport* keys)
 {
   inputKeyboard->setValue((uint8_t*)keys, sizeof(KeyReport));
@@ -661,6 +725,14 @@ void sendReport(KeyReport* keys)
 
 void sendReport(MediaKeyReport* keys)
 {
+  //Serial.println(Command(LOG, "Media " + String(_mediaKeyReport[0], 16) + "," + String(_mediaKeyReport[1], 16)));
   inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
   inputMediaKeys->notify();
+}
+
+void sendSystemReport(SystemKeyReport* keys)
+{
+  //Serial.println(Command(LOG, "System " + String(_systemKeyReport[0], 16) + "," + String(_systemKeyReport[1], 16)));
+  inputSystemKeys->setValue((uint8_t*)keys, sizeof(SystemKeyReport));
+  inputSystemKeys->notify();
 }
