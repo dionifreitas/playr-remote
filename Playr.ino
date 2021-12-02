@@ -72,13 +72,13 @@ class DescriptorCallbacks : public NimBLEDescriptorCallbacks {
 
 class CharacteristicCallbacks: public NimBLECharacteristicCallbacks {
     void onRead(NimBLECharacteristic* pCharacteristic) {
-      Serial.println(Command(LOG, pCharacteristic->getUUID().toString().c_str()));
+      //Serial.println(Command(LOG, pCharacteristic->getUUID().toString().c_str()));
     };
 
     void onWrite(NimBLECharacteristic* pCharacteristic) {};
 
     void onNotify(NimBLECharacteristic* pCharacteristic) {
-      Serial.println(Command(LOG, "Sending notification to clients"));
+      //Serial.println(Command(LOG, "Sending notification to clients"));
     };
 
     void onStatus(NimBLECharacteristic* pCharacteristic, Status status, int code) {};
@@ -563,8 +563,7 @@ size_t write(uint8_t c)
 }
 
 size_t press(uint8_t hidKey)
-{
-  Serial.println(Command(LOG, "PRESS " + hidKey));
+{  
   uint8_t i;
   if (hidKey == 0) {
     return 0;
@@ -725,14 +724,12 @@ void sendReport(KeyReport* keys)
 
 void sendReport(MediaKeyReport* keys)
 {
-  //Serial.println(Command(LOG, "Media " + String(_mediaKeyReport[0], 16) + "," + String(_mediaKeyReport[1], 16)));
   inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
   inputMediaKeys->notify();
 }
 
 void sendSystemReport(SystemKeyReport* keys)
 {
-  //Serial.println(Command(LOG, "System " + String(_systemKeyReport[0], 16) + "," + String(_systemKeyReport[1], 16)));
   inputSystemKeys->setValue((uint8_t*)keys, sizeof(SystemKeyReport));
   inputSystemKeys->notify();
 }
