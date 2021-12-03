@@ -539,6 +539,9 @@ void handleKeyEvent(char command, String value) {
   }
 }
 
+int ledState = LOW;
+unsigned long previousMillis = 0;
+
 void loop() {
   if (Serial.available()) {
     digitalWrite(LED, HIGH);
@@ -548,10 +551,14 @@ void loop() {
   }
 
   if (!isConnected) {
-    digitalWrite(LED, HIGH);
-    delay(500);
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= 500) {
+      ledState = (ledState == LOW) ? HIGH : LOW;
+      digitalWrite(LED, ledState);
+      previousMillis = currentMillis;
+    }
+  } else if (ledState == HIGH) {
     digitalWrite(LED, LOW);
-    delay(500);
   }
 }
 
@@ -563,7 +570,7 @@ size_t write(uint8_t c)
 }
 
 size_t press(uint8_t hidKey)
-{  
+{
   uint8_t i;
   if (hidKey == 0) {
     return 0;
