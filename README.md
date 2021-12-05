@@ -56,4 +56,9 @@ Example: Control + ALT + DELETE. Press KEY_LEFTCTRL (29), Press KEY_LEFTALT(56),
 	U:56\n
 	U:29\n
 
+You can buy a generic remote controler like this:
+![remote](https://user-images.githubusercontent.com/8365145/144768620-b4a1cbbc-e6cd-4bb6-87ff-ca0b7be76b94.jpg)
+
+This is known as an Air Mouse, basically it's just a keyboard and mouse for Android TVs and TV boxes. You can also use it on your computer. The device is recognized as a simple keyboard. They come with a dongle, but there is a bluetooth version. You need to connect the keyboard to Home Assistant using the dongle. I haven't tested it with the bluetooth version. My Home Assistant is running on my Raspiberry Pi.
+
 
