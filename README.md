@@ -15,9 +15,9 @@ Once running, the ESP32 will emulate a bluetooth keyboard. The ESP32 LED will bl
 
 Once connected, you will be able to send commands through the serial port to ESP32 which will map the keyCodes and send them to the bluetooth client.
 
-This is a example of commands that can be sent:
+This is a example of command that can be sent:
 
-    P;116\n
+	P;116\n
 
 Explanation: 'P' means that you want just press and release a key, the ';' is a separator, the '116' is a KEY_POWER of Linux Input Codes, you can see all on this list: [Input event codes from Linux](https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h)
 The '\n' is a line break separator, is mandatory to end a command.
@@ -29,7 +29,7 @@ You can create an automation on Home Assistant to send the commands to ESP.
 
 The structure of the commands is simple. The command char (P or D or U), the separator ';' the keycode and the linebreak '\n' to end the command.
 
-    P;(keyCode)\n
+	P;(keyCode)\n
 	D;(keyCode)\n
 	U;(keyCode)\n
 	
@@ -42,10 +42,10 @@ When you sent the keydown volume "**D;115\n**", the volume in your device will i
 
 Example: Typing the character "A" (capitalized). On your real keyboard, probably you need to press **SHIFT** and **a**, to make this, you must send 4 events: Press KEY_LEFTSHIFT (42),  Press KEY_A(30), Release KEY_A(30), Release KEY_LEFTSHIFT (42).
 
-    D;42\n
-    D;30\n
-    U;30\n
-    U;42\n
+	D;42\n
+	D;30\n
+	U;30\n
+	U;42\n
     
 Example: Control + ALT + DELETE. Press KEY_LEFTCTRL (29), Press KEY_LEFTALT(56), Press KEY_DELETE(111), Release KEY_DELETE(111), Release KEY_LEFTALT(56), Release KEY_LEFTCTRL(29) 
 
@@ -55,3 +55,5 @@ Example: Control + ALT + DELETE. Press KEY_LEFTCTRL (29), Press KEY_LEFTALT(56),
 	U:111\n
 	U:56\n
 	U:29\n
+
+
