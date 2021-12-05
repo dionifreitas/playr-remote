@@ -17,10 +17,10 @@ const char CLIENT_DISCONNECTED = 'O';
 const char SET_INSTANCE = 'S';
 const char LOG = 'I';
 const char DELIMITER = ';';
+const char DELETE_ALL_PAIRED = 'R';
 
 typedef uint8_t MediaKeyReport[2];
 MediaKeyReport _mediaKeyReport;
-
 typedef uint8_t SystemKeyReport[2];
 SystemKeyReport _systemKeyReport;
 
@@ -446,7 +446,7 @@ int getInstance() {
 }
 
 void setupInstance(int instance) {
-  if (instance >= 0 && instance < 255) {
+  if (instance >= 0 && instance < CONFIG_BT_NIMBLE_MAX_CONNECTIONS) {
     preferences.begin("PLAYR", false);
     preferences.putUInt("INST", instance);
     preferences.end();
@@ -496,12 +496,12 @@ void handleMessage() {
     handleKeyEvent(command, value);
   } else if (command == SET_INSTANCE) {
     handleServerInstance(value);
-  }
+  } 
 }
 
 void handleServerInstance(String value) {
   int instance = value.toInt();
-  if (instance >= 0 && instance < 255) {
+  if (instance >= 0 && instance < CONFIG_BT_NIMBLE_MAX_CONNECTIONS) {
     setupInstance(instance);
     NimBLEDevice::deinit(true);
     ESP.restart();
