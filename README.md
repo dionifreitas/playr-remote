@@ -151,4 +151,8 @@ On Output: **Add Character To Output Messages**: **\n** **(This is very importan
 
 ![image](https://user-images.githubusercontent.com/8365145/147003958-d1c8ce96-91df-4a14-9e47-cc23076138b4.png)
 
+You can drag a **debug node** with output: **complete msg object** to see the logs.
+
+This is it!
+
 
