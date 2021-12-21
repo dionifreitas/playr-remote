@@ -9,6 +9,8 @@ The main purpose of this project is able to control my Alexa devices directly fr
 
 Futhermore, you can control your Android TV, Windows PC, or other devices that accept a BLE keyboard. For example, tested on Android Mi TV Stick: You can turn on, turn off, control the volume, type text, etc...
 
+Warning: This was developed and tested on DOIT ESP32 ESP-WROOM-32.
+
 # How it works?
 
 Once running, the ESP32 will emulate a bluetooth keyboard. The ESP32 LED will blink while there is no any device connected. The devices must search and pair with "Playr Remote". 
@@ -56,9 +58,97 @@ Example: Control + ALT + DELETE. Press KEY_LEFTCTRL (29), Press KEY_LEFTALT(56),
 	U:56\n
 	U:29\n
 
-You can buy a generic remote controler like this:
+# Home Assistant 
+
+The connection between ESP32 and Home Assistant will be done through the serial port. This is enough to send commands to your devices: turn on, turn off, play... etc. But if your intention is create a remote controller for Alexa (it is my case), you can follow the steps below:
+
+Prerequisites:
+
+The [Node-RED](https://community.home-assistant.io/t/home-assistant-community-add-on-node-red/55023) running on HA to create automations more easily.
+
+The [keyboard_remote](https://www.home-assistant.io/integrations/keyboard_remote/) integration to receive signals from a keyboard and use it as a remote control.
+
+You can buy a generic remote control like the below to be used in Home Assistant; if not, you can use a normal keyboard (you keyboard must have media keys if you wish control Alexa):
+
 ![remote](https://user-images.githubusercontent.com/8365145/144768620-b4a1cbbc-e6cd-4bb6-87ff-ca0b7be76b94.jpg)
 
-This is known as an Air Mouse, basically it's just a keyboard and mouse for Android TVs and TV boxes. You can also use it on your computer. The device is recognized as a simple keyboard. They come with a dongle, but there is a bluetooth version. You need to connect the keyboard to Home Assistant using the dongle. I haven't tested it with the bluetooth version. My Home Assistant is running on my Raspiberry Pi.
+This is known as an Air Mouse, basically it's just a keyboard and mouse for Android TV boxes. You can also use it on your computer. The device is recognized as a simple keyboard. They come with a dongle, but there is a bluetooth version. You need to connect the keyboard to Home Assistant using the dongle or over bluetooth. I haven't tested it with the bluetooth version. 
+
+My Home Assistant is running on Raspiberry Pi 4 Model B. 
+The ESP32 is connected directly to Raspiberry over USB.
+
+How to start: 
+Use Arduino IDE to compile on your ESP32 and then, connect over usb to Home Assistant. Connect the keyboard too.
+
+Once connected, you must identify your keyboard. (On HA, go to Supervisor > System > Host > Hardware), you will se something like: 
+
+![image](https://user-images.githubusercontent.com/8365145/146999507-2789311a-5472-4a51-b3b1-733ffd7f030b.png)
+
+My Keyboard was recognized with 4 input devices (event0, event1, event2, event3). Maybe your keyboard have only one.
+
+Enable [keyboard_remote](https://www.home-assistant.io/integrations/keyboard_remote/) integration (it is a native integration, you just add to configuration.yaml). 
+This is my configuration:
+```yaml
+keyboard_remote:
+  - device_descriptor: "/dev/input/event0"
+    emulate_key_hold: false
+    type:
+      - "key_down"
+      - "key_up"
+  - device_descriptor: "/dev/input/event1"
+    emulate_key_hold: false
+    type:
+      - "key_down"
+      - "key_up"
+  - device_descriptor: "/dev/input/event2"
+    emulate_key_hold: false
+    type:
+      - "key_down"
+      - "key_up"
+  - device_descriptor: "/dev/input/event3"
+    emulate_key_hold: false
+    type:
+      - "key_down"
+      - "key_up"
+```
+Verify configuration, save and reboot.
+
+On Node-RED we will listen for keyboard events and forward over bluetooth to devices:
+
+This is a very basic example: All keys events of keyboard will redirected to target device. 
+
+![image](https://user-images.githubusercontent.com/8365145/147002326-6f4cbfd5-48f6-43e8-844f-0d7a34a4f56c.png)
+
+Nodes configuration:
+
+**events: all** node (aka Keyboard Received)
+
+	Name: Keyboard Remote or other of your choice
+	Event type: keyboard_remote_command_received
+	Output properties:
+	msg.payload = Expression: $outputData("eventData").event
+
+![image](https://user-images.githubusercontent.com/8365145/147002930-ede3049b-1895-461e-95ad-77e7fe15948d.png)
+
+
+**function** node (aka Serialize)
+Name
+The **on message** code must be:
+```javascript
+let payload = (msg.payload.type == "key_up" ? 'U' : 'D') + ';' + msg.payload.key_code;
+msg.payload = payload;
+return msg;
+```
+![image](https://user-images.githubusercontent.com/8365145/147003274-9a57c3ab-1cc9-4737-bdb5-1367c9aa09fa.png)
+
+**serial out** node (aka Remote)
+
+Add a new Serial Port, on **Serial port** field specify your device, in my case was **/dev/ttyUSB0**
+
+On Input: Split input **on the character**: **\n** and deliver **ASCII string**
+
+On Output: **Add Character To Output Messages**: **\n** **(This is very important or commands will not work)**
+
+![image](https://user-images.githubusercontent.com/8365145/147003958-d1c8ce96-91df-4a14-9e47-cc23076138b4.png)
 
 
