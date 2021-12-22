@@ -132,8 +132,9 @@ Nodes configuration:
 
 
 **function** node (aka Serialize)
-Name
+
 The **on message** code must be:
+
 ```javascript
 let payload = (msg.payload.type == "key_up" ? 'U' : 'D') + ';' + msg.payload.key_code;
 msg.payload = payload;
