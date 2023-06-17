@@ -3,9 +3,9 @@
 
 A BLE Keyboard on ESP32 (that can be be used on Home Assistant) to control devices over bluetooth.
 
-This project is inspired on [ESP32-BLE-Keyboard](https://github.com/T-vK/ESP32-BLE-Keyboard) but it has modifications to be recognized as an Alexa Gadget.
+This project is inspired on [ESP32-BLE-Keyboard](https://github.com/T-vK/ESP32-BLE-Keyboard).
 
-The main purpose of this project is able to control my Alexa devices directly from Home Assistant, without any API, as a remote control. The objective was control media: Next, Prev, Volume Up and Down, Play and Pause, and Mute. It's working fine with Echo 4! (I haven't tested it on other Alexa devices yet)
+The main purpose of this project is able to control my devices directly from Home Assistant, without any API, as a remote control. The objective was control media: Next, Prev, Volume Up and Down, Play and Pause, and Mute.
 
 Futhermore, you can control your Android TV, Windows PC, or other devices that accept a BLE keyboard. For example, tested on Android Mi TV Stick: You can turn on, turn off, control the volume, type text, etc...
 
