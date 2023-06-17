@@ -287,64 +287,11 @@ void loop() {
 //   return 1;
 // }
 
-// size_t writeMediaKey(uint8_t mediaKey)
-// {
-//   uint8_t p = pressMediaKey(mediaKey);
-//   releaseMediaKey(mediaKey);
-//   return p;
-// }
 
-// size_t pressMediaKey(uint8_t mediaKey)
-// {
-//   switch (mediaKey) {
-//     case KEY_NEXTSONG:
-//       _mediaKeyReport[0] = 0x01;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_PREVIOUSSONG:
-//       _mediaKeyReport[0] = 0x02;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_STOP:
-//       _mediaKeyReport[0] = 0x04;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_PLAYPAUSE:
-//       _mediaKeyReport[0] = 0x08;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_MUTE:
-//       _mediaKeyReport[0] = 0x10;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_VOLUMEUP:
-//       _mediaKeyReport[0] = 0x20;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_VOLUMEDOWN:
-//       _mediaKeyReport[0] = 0x40;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//     case KEY_BACK:
-//       _mediaKeyReport[0] = 0x00;
-//       _mediaKeyReport[1] = 0x20;
-//       break;
-//     case KEY_HOMEPAGE:
-//       _mediaKeyReport[0] = 0x80;
-//       _mediaKeyReport[1] = 0x00;
-//       break;
-//   }
-//   sendReport(&_mediaKeyReport);
-//   return 1;
-// }
 
-// size_t releaseMediaKey(uint8_t mediaKey)
-// {
-//   _mediaKeyReport[0] = 0x00;
-//   _mediaKeyReport[1] = 0x00;
-//   sendReport(&_mediaKeyReport);
-//   return 1;
-// }
+
+
+
 
 // size_t writeSystemKey(uint8_t systemKey)
 // {
@@ -383,11 +330,7 @@ void loop() {
 //   inputKeyboard->notify();
 // }
 
-// void sendReport(MediaKeyReport* keys)
-// {
-//   inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
-//   inputMediaKeys->notify();
-// }
+
 
 // void sendSystemReport(SystemKeyReport* keys)
 // {

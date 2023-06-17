@@ -12,7 +12,9 @@ uint16_t vid = 0x05ac;
 uint16_t pid = 0x820a;
 uint16_t version = 0x0210;
 
+// Reports
 KeyReport _keyReport;
+MediaKeyReport _mediaKeyReport;
 
 HidManager::HidManager() {}
 
@@ -59,6 +61,12 @@ void HidManager::sendReport(KeyReport *keys) {
   inputKeyboard->notify();
 }
 
+void HidManager::sendReport(MediaKeyReport* keys) {
+  inputMediaKeys->setValue((uint8_t*)keys, sizeof(MediaKeyReport));
+  inputMediaKeys->notify();
+}
+
+// Regular Keys
 size_t HidManager::press(uint8_t hidKey) {
   int modifier = getModifier(hidKey);
   if (modifier != -1) {
@@ -99,3 +107,66 @@ size_t HidManager::write(uint8_t hidKey) {
   this->release(hidKey);
   return p;
 }
+
+// Media Keys
+size_t HidManager::pressMediaKey(uint8_t mediaKey)
+{
+  switch (mediaKey) {
+    case KEY_NEXTSONG:
+      _mediaKeyReport[0] = 0x01;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_PREVIOUSSONG:
+      _mediaKeyReport[0] = 0x02;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_STOP:
+      _mediaKeyReport[0] = 0x04;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_PLAYPAUSE:
+      _mediaKeyReport[0] = 0x08;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_MUTE:
+      _mediaKeyReport[0] = 0x10;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_VOLUMEUP:
+      _mediaKeyReport[0] = 0x20;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_VOLUMEDOWN:
+      _mediaKeyReport[0] = 0x40;
+      _mediaKeyReport[1] = 0x00;
+      break;
+    case KEY_BACK:
+      _mediaKeyReport[0] = 0x00;
+      _mediaKeyReport[1] = 0x20;
+      break;
+    case KEY_HOMEPAGE:
+      _mediaKeyReport[0] = 0x80;
+      _mediaKeyReport[1] = 0x00;
+      break;
+  }
+  sendReport(&_mediaKeyReport);
+  return 1;
+}
+
+size_t HidManager::releaseMediaKey(uint8_t mediaKey)
+{
+  _mediaKeyReport[0] = 0x00;
+  _mediaKeyReport[1] = 0x00;
+  sendReport(&_mediaKeyReport);
+  return 1;
+}
+
+size_t HidManager::writeMediaKey(uint8_t mediaKey)
+{
+  uint8_t p = this->pressMediaKey(mediaKey);
+  this->releaseMediaKey(mediaKey);
+  return p;
+}
+
+// System Keys
+
