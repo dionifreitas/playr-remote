@@ -3,23 +3,23 @@
 
 // Modifier Keys
 #define MOD_KEY_LEFTCTRL 1;     // aka 00000001, 0x01
-#define MOD_KEY_LEFTSHIFT 2;    // aka 00000010, 0x02 
-#define MOD_KEY_LEFTALT 4;      // aka 00000100, 0x04 
-#define MOD_KEY_LEFT_GUI 8;     // aka 00001000, 0x08 
-#define MOD_KEY_RIGHTCTRL 16;   // aka 00010000, 0x10 
-#define MOD_KEY_RIGHTSHIFT 32;  // aka 00100000, 0x20 
-#define MOD_KEY_RIGHTALT 64;    // aka 01000000, 0x40 
-#define MOD_KEY_RIGHT_GUI 128;  // aka 10000000, 0x80 
+#define MOD_KEY_LEFTSHIFT 2;    // aka 00000010, 0x02
+#define MOD_KEY_LEFTALT 4;      // aka 00000100, 0x04
+#define MOD_KEY_LEFT_GUI 8;     // aka 00001000, 0x08
+#define MOD_KEY_RIGHTCTRL 16;   // aka 00010000, 0x10
+#define MOD_KEY_RIGHTSHIFT 32;  // aka 00100000, 0x20
+#define MOD_KEY_RIGHTALT 64;    // aka 01000000, 0x40
+#define MOD_KEY_RIGHT_GUI 128;  // aka 10000000, 0x80
 
 // Media Keys
 #define USB_HID_SCAN_NEXT 0x01
 #define USB_HID_SCAN_PREV 0x02
-#define USB_HID_STOP      0x04
-#define USB_HID_EJECT     0x08
-#define USB_HID_PAUSE     0x10
-#define USB_HID_MUTE      0x20
-#define USB_HID_VOL_UP    0x40
-#define USB_HID_VOL_DEC   0x80
+#define USB_HID_STOP 0x04
+#define USB_HID_EJECT 0x08
+#define USB_HID_PAUSE 0x10
+#define USB_HID_MUTE 0x20
+#define USB_HID_VOL_UP 0x40
+#define USB_HID_VOL_DEC 0x80
 
 #define KEY_ESC 0x29
 #define KEY_1 0x1E
@@ -184,4 +184,4 @@
 #define KEY_F23 0x72
 #define KEY_F24 0x73
 
-#endif 
+#endif

@@ -1,12 +1,13 @@
 #include "BluetoothManager.h"
 #include "HidKeyCodes.h"
 #include "HidManager.h"
-#include "Util.h" 
+#include "Util.h"
 
 #define LED 2
 
-#define PRESS 'P'
-#define RELEASE 'R'
+#define PRESS 'D'    // DOWN KEY
+#define RELEASE 'U'  // UP KEY
+#define WRITE 'P'    // DOWN and UP key
 #define SEPARATOR ';'
 #define END '\n'
 
@@ -14,52 +15,55 @@ BluetoothManager bluetoothManager;
 HidManager hidManager;
 
 void setup() {
-    Serial.begin(115200);
-    pinMode(LED, OUTPUT);
-    Serial.println("Starting System...");
-    bluetoothManager.setupServer("Remote Control");
-    hidManager.setupHid(bluetoothManager.getServer());
-    Serial.println("Started Playr Server!");
+  Serial.begin(115200);
+  pinMode(LED, OUTPUT);
+  Serial.println("Starting System...");
+  bluetoothManager.setupServer("Remote Control");
+  hidManager.setupHid(bluetoothManager.getServer());
+  Serial.println("Started Playr Server!");
 }
 
 String readSerialIfAvailable() {
-    if (Serial.available()) {
-        return Serial.readStringUntil(END);
-    }
-    return "";
+  if (Serial.available()) {
+    return Serial.readStringUntil(END);
+  }
+  return "";
 }
 
 void handleKeyEvent(char command, String value) {
   int key = getHidKeyCode(value.toInt());
   if (key == 0) {
-    Serial.println("E:Invalid input event code: \""+ value + "\". See all available codes at: https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h");
+    Serial.println("E:Invalid input event code: '" + value + "'. See all available codes at: https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h");
   }
   switch (command) {
     case PRESS: hidManager.press(key); break;
     case RELEASE: hidManager.release(key); break;
-    // case ON_KEY_PRESSED: writeMediaKey(key); break;
-    default: return;
+    case WRITE: hidManager.write(key); break;
+    default:
+      Serial.print("E:Invalid command: '");
+      Serial.print(command);
+      Serial.println("'");
+      return;
   }
 }
 
 void handleMessages() {
-    String message = trim(readSerialIfAvailable());
-    if (message.length() > 0) {
-        digitalWrite(LED, HIGH);
-        char command = splitString(message, SEPARATOR, 0).charAt(0);
-        String value = splitString(message, SEPARATOR, 1);
+  String message = trim(readSerialIfAvailable());
+  if (message.length() > 0) {
+    digitalWrite(LED, HIGH);
+    char command = splitString(message, SEPARATOR, 0).charAt(0);
+    String value = splitString(message, SEPARATOR, 1);
 
-        handleKeyEvent(command, value);
-        digitalWrite(LED, LOW);
-    } else {
-        Serial.println("E:Invalid input");
-    }
+    handleKeyEvent(command, value);
+    digitalWrite(LED, LOW);
+  } else {
+    Serial.println("E:Invalid input command");
+  }
 }
 
 void loop() {
 
-    handleMessages();
-
+  handleMessages();
 }
 
 // KeyReport getKeyReportFromKey(char key) {
@@ -275,12 +279,7 @@ void loop() {
 //   }
 // }
 
-// size_t write(uint8_t c)
-// {
-//   uint8_t p = press(c);
-//   release(c);
-//   return p;
-// }
+
 
 
 

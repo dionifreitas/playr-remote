@@ -3,20 +3,19 @@
 #ifndef BluetoothManager_h
 #define BluetoothManager_h
 
-class BluetoothManager
-{
+class BluetoothManager {
 
 public:
-    BluetoothManager();
+  BluetoothManager();
 
 public:
-    bool isConnected;
+  bool isConnected;
 
 public:
-    void setupServer(String deviceName);
+  void setupServer(String deviceName);
 
 public:
-    NimBLEServer *getServer();
+  NimBLEServer *getServer();
 };
 
 #endif
